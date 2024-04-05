@@ -110,7 +110,7 @@ with ui.sidebar(open="desktop"):
             )
 
 with ui.navset_tab(id="tab"):
-    with ui.nav_panel("div"):
+    with ui.nav_panel("Diversification"):
         with ui.layout_columns(col_widths=[6, 6]):
             with ui.card(full_screen=True):
                 ui.card_header("Diversifiacton")
@@ -130,7 +130,7 @@ with ui.navset_tab(id="tab"):
                     means = np.array([[input.return1() / 100, input.return2() / 100]])
                     plot_risky(means, cov2())
 
-    with ui.nav_panel("frontier"):
+    with ui.nav_panel("Efficient Frontier"):
         with ui.layout_columns(col_widths=[6, 6]):
             with ui.card(full_screen=True):
                 with ui.card_header(
