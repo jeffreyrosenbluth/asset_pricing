@@ -109,44 +109,66 @@ with ui.sidebar(open="desktop"):
                 value=0.3,
             )
 
-with ui.layout_columns(col_widths=[6, 6, 6, 6]):
-    with ui.card(full_screen=True):
-        ui.card_header("Diversifiacton")
+with ui.navset_tab(id="tab"):
+    with ui.nav_panel("div"):
+        with ui.layout_columns(col_widths=[6, 6]):
+            with ui.card(full_screen=True):
+                ui.card_header("Diversifiacton")
 
-        @render.plot
-        def diverse():
-            plot_diversification(0.1, 0, 0.25, 0.5, input.num_stocks())
+                @render.plot
+                def diverse():
+                    plot_diversification(0.1, 0, 0.25, 0.5, input.num_stocks())
 
-    with ui.card(full_screen=True):
-        with ui.card_header(class_="d-flex justify-content-between align-items-center"):
-            "2 Risky Assets"
+            with ui.card(full_screen=True):
+                with ui.card_header(
+                    class_="d-flex justify-content-between align-items-center"
+                ):
+                    "2 Risky Assets"
 
-        @render.plot
-        def asset2():
-            means = np.array([[input.return1() / 100, input.return2() / 100]])
-            plot_risky(means, cov2())
+                @render.plot
+                def asset2():
+                    means = np.array([[input.return1() / 100, input.return2() / 100]])
+                    plot_risky(means, cov2())
 
-    with ui.card(full_screen=True):
-        with ui.card_header(class_="d-flex justify-content-between align-items-center"):
-            "3 Risky Assets"
+    with ui.nav_panel("frontier"):
+        with ui.layout_columns(col_widths=[6, 6]):
+            with ui.card(full_screen=True):
+                with ui.card_header(
+                    class_="d-flex justify-content-between align-items-center"
+                ):
+                    "3 Risky Assets"
 
-        @render.plot
-        def asset3():
-            means = np.array(
-                [[input.return1() / 100, input.return2() / 100, input.return3() / 100]]
-            )
-            plot_risky(means, cov3())
+                @render.plot
+                def asset3():
+                    means = np.array(
+                        [
+                            [
+                                input.return1() / 100,
+                                input.return2() / 100,
+                                input.return3() / 100,
+                            ]
+                        ]
+                    )
+                    plot_risky(means, cov3())
 
-    with ui.card(full_screen=True):
-        with ui.card_header(class_="d-flex justify-content-between align-items-center"):
-            "Frontier"
+            with ui.card(full_screen=True):
+                with ui.card_header(
+                    class_="d-flex justify-content-between align-items-center"
+                ):
+                    "Frontier"
 
-        @render.plot
-        def frontier():
-            means = np.array(
-                [[input.return1() / 100, input.return2() / 100, input.return3() / 100]]
-            )
-            plot_frontier(means, cov3(), 0.05)
+                @render.plot
+                def frontier():
+                    means = np.array(
+                        [
+                            [
+                                input.return1() / 100,
+                                input.return2() / 100,
+                                input.return3() / 100,
+                            ]
+                        ]
+                    )
+                    plot_frontier(means, cov3(), 0.05)
 
 
 ui.include_css(app_dir / "styles.css")
