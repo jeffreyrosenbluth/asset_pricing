@@ -97,13 +97,7 @@ app_ui = ui.page_navbar(
             col_widths=[8, 4],
             # col_widths=[6, 6],
         ),
-        ui.layout_columns(
-            ui.output_text("space3", ""),
-            ui.row(
-                ui.input_switch(id="cml3", label="Capital Market Line", value=False),
-            ),
-            col_widths=[4, 4, 4],
-        ),
+        ui.input_switch(id="cml3", label="Capital Market Line", value=False),
     ),
     title="Modern Portfolio Theory",
 )
