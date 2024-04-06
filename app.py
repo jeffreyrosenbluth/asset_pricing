@@ -6,8 +6,8 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 from core import (
-    plot_frontier_plotly,
-    plot_diversification_plotly,
+    plot_frontier,
+    plot_diversification,
     tangency_point,
 )
 
@@ -112,7 +112,7 @@ app_ui = ui.page_navbar(
 def server(input, output, session):
     @render_plotly
     def diverse():
-        return plot_diversification_plotly(0.1, 0, 0.25, 0.5, input.num_stocks())
+        return plot_diversification(0.1, 0, 0.25, 0.5, input.num_stocks())
 
     @render_plotly
     def asset2_rf():
@@ -132,7 +132,7 @@ def server(input, output, session):
             ]
         )
         rf = 0.05 if input.cml2() else None
-        return plot_frontier_plotly(means, cov, 0.05, 0.16, rf=rf)
+        return plot_frontier(means, cov, 0.05, 0.16, rf=rf)
 
     @render_plotly
     def asset3_rf():
@@ -154,7 +154,7 @@ def server(input, output, session):
         )
         tangency_point(means, cov, 0.05)
         rf = 0.05 if input.cml3() else None
-        return plot_frontier_plotly(means, cov, 0.05, 0.25, rf=rf)
+        return plot_frontier(means, cov, 0.05, 0.25, rf=rf)
 
 
 app = App(app_ui, server)
