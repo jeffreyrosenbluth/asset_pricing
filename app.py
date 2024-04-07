@@ -9,6 +9,7 @@ from core import (
     plot_frontier,
     plot_diversification,
     tangency_point,
+    plot_mv,
 )
 
 
@@ -24,14 +25,18 @@ app_ui = ui.page_navbar(
         "Diversification",
         ui.layout_columns(
             ui.card(
+                ui.card_header("Risk for Portfolio Size"),
                 output_widget("diverse"),
-                ui.input_slider(
-                    "num_stocks",
-                    "Number of Stocks",
-                    min=2,
-                    max=30,
-                    value=10,
+                ui.card_footer(
+                    ui.input_slider(
+                        "num_stocks",
+                        "Number of Stocks",
+                        min=2,
+                        max=30,
+                        value=10,
+                    )
                 ),
+                height="650px",
             ),
             ui.markdown(
                 """
@@ -46,11 +51,18 @@ app_ui = ui.page_navbar(
         ),
     ),
     ui.nav_panel(
-        "2 Stock Portfolio",
+        "2 Stocks",
         ui.layout_columns(
-            ui.card(output_widget("asset2_rf")),
-            # col_widths=[6, 6],
-            # ),
+            ui.card(
+                ui.card_header("Mean Variance Frontier for 2 Stocks"),
+                output_widget("asset2_rf"),
+                ui.card_footer(
+                    ui.input_switch(
+                        id="cml2", label="Capital Market Line", value=False
+                    ),
+                ),
+                full_screen=True,
+            ),
             ui.markdown(
                 """
             #### 2 Stocks
@@ -72,14 +84,51 @@ app_ui = ui.page_navbar(
                 """
             ),
             col_widths=[8, 4],
+            height="650px",
         ),
-        ui.input_switch(id="cml2", label="Capital Market Line", value=False),
     ),
     ui.nav_panel(
-        "3 Stock Portfolio",
+        "Build Frontier",
         ui.layout_columns(
-            # ),
-            ui.card(output_widget("asset3_rf")),
+            ui.card(
+                ui.card_header("Frontiers for Small Portfolios"),
+                output_widget("mvfs"),
+                ui.card_footer(
+                    ui.input_checkbox_group(
+                        "portfolio_size",
+                        "Portfolio Sizes",
+                        {
+                            2: "2",
+                            3: "3",
+                            4: "4",
+                            5: "5",
+                        },
+                        selected=[2, 3, 4, 5],
+                        inline=True,
+                    ),
+                ),
+                height="700px",
+            ),
+            ui.markdown(
+                """
+            #### Building the Efficient Frontier from Smaller Portfolios
+            ---
+            First build the 2 stock portfolios, then the 3 stock portfolios,
+            ..., until we build the frontier of the 5 stock portfolio.
+                """
+            ),
+            col_widths=[8, 4],
+            height="650",
+        ),
+    ),
+    ui.nav_panel(
+        "3 Stocks",
+        ui.layout_columns(
+            ui.card(
+                ui.card_header("Mean Variance Frontier for 3 Stocks"),
+                output_widget("asset3_rf"),
+                ui.input_switch(id="cml3", label="Capital Market Line", value=True),
+            ),
             ui.markdown(
                 """
             #### 3 Stocks
@@ -95,9 +144,8 @@ app_ui = ui.page_navbar(
                 """
             ),
             col_widths=[8, 4],
-            # col_widths=[6, 6],
+            height="650px",
         ),
-        ui.input_switch(id="cml3", label="Capital Market Line", value=False),
     ),
     title="Modern Portfolio Theory",
 )
@@ -149,6 +197,10 @@ def server(input, output, session):
         tangency_point(means, cov, 0.05)
         rf = 0.05 if input.cml3() else None
         return plot_frontier(means, cov, 0.05, 0.25, rf=rf)
+
+    @render_plotly
+    def mvfs():
+        return plot_mv(input.portfolio_size())
 
 
 app = App(app_ui, server)
