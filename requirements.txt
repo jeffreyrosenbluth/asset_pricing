@@ -1,7 +1,5 @@
 faicons
 shiny
 shinywidgets
-plotly
-pandas
 matplotlib
 seaborn

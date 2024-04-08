@@ -3,29 +3,30 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
-import pandas as pd
-import seaborn as sns
 from core import (
     plot_diversification,
     tangency_point,
     plot_frontier,
     plot_mv,
 )
-
-
-# Load data and compute static values
 from shiny import App, render, ui
-from shinywidgets import output_widget, render_plotly
 
+app_dir = Path(__file__).parent
 
-sns.set_theme(style="whitegrid")
+mathjax = ui.head_content(
+    ui.tags.script(
+        src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+    ),
+    ui.tags.script("if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub]);"),
+)
 
 app_ui = ui.page_navbar(
+    mathjax,
     ui.nav_panel(
         "Diversification",
         ui.layout_columns(
             ui.card(
-                ui.card_header("Risk for Portfolio Size"),
+                ui.card_header("Risk vs Portfolio Size"),
                 ui.output_plot("diverse"),
                 ui.card_footer(
                     ui.input_slider(
@@ -42,9 +43,16 @@ app_ui = ui.page_navbar(
                 """
             #### Diversification
             ---
-            The more stocks we add the more we reduce the risk of the portfolio.
-            Unless the correlations is zero, the risk of the portfolio will never
-            be zero but will asymptotically approach a minimum value.
+            Portfolios of stocks all with the same standard deviation and pairwise correlations.
+            The more stocks we add, the more we reduce the risk of the portfolio.
+            The risk of the portfolio will never
+            be zero but will asymptotically approach a minimum value, unless the correlation is zero.
+            The minimum risk is:
+            $$ \sigma_p = \sigma \sqrt{\\frac{1 + (N-1)\\rho)}{N}} $$
+            Letting _N_ go to infinity, we get:
+            $$ \lim_{N \\to \infty} \sigma_p = \sigma \sqrt{\\rho} $$
+            So for example the red line with a correlation of 0.25 will have a minimum risk of 5%.
+            $$ \sigma  \sqrt{\\rho}= 10 \sqrt{0.25} = (10)(0.5) = 5$$
                 """
             ),
             col_widths=[8, 4],
@@ -64,7 +72,7 @@ app_ui = ui.page_navbar(
                 full_screen=True,
             ),
             ui.markdown(
-                """
+                r"""
             #### 2 Stocks
             ---
             *Returns*: 8%, 15%  
@@ -88,7 +96,7 @@ app_ui = ui.page_navbar(
         ),
     ),
     ui.nav_panel(
-        "Build Frontier",
+        "Portfolios",
         ui.layout_columns(
             ui.card(
                 ui.card_header("Frontiers for Small Portfolios"),
@@ -101,9 +109,8 @@ app_ui = ui.page_navbar(
                             2: "2",
                             3: "3",
                             4: "4",
-                            5: "5",
                         },
-                        selected=[2, 3, 4, 5],
+                        selected=[2, 3, 4],
                         inline=True,
                     ),
                 ),
@@ -113,8 +120,10 @@ app_ui = ui.page_navbar(
                 """
             #### Building the Efficient Frontier from Smaller Portfolios
             ---
-            First build the 2 stock portfolios, then the 3 stock portfolios,
-            ..., until we build the frontier of the 5 stock portfolio.
+            Five stocks in μ-σ space, reflecting different combinations of expected return (μ) and risk (σ). If portfolio size 2 is selected
+            all possible combinations of the assets two at a time are plotted. And similarly for 3 and 4 stock portfolios. 
+            As more and more combinations are created, the curves accumulate to show the growing number of possible portfolios. 
+            The accumulation of curves outlines a space representing all possible combinations of the original five stocks.
                 """
             ),
             col_widths=[8, 4],
@@ -204,4 +213,3 @@ def server(input, output, session):
 
 
 app = App(app_ui, server)
-# app_dir = Path(__file__).parent

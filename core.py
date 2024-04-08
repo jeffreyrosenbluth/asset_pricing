@@ -4,9 +4,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-import plotly.graph_objs as go
-from plotly.colors import DEFAULT_PLOTLY_COLORS as colors
+import seaborn as sns
+
+sns.set_theme(style="whitegrid")
 
 
 def diversification(std, corr, N):
@@ -59,14 +59,14 @@ def plot_diversification(std, corr1, corr2, corr3, N):
 
     fig, ax = plt.subplots()
 
-    ax.plot(np.arange(1, N + 1), zs * 100, label=f"ρ = {corr1:.2f}")
-    ax.plot(np.arange(1, N + 1), ys * 100, label=f"ρ = {corr2:.2f}")
-    ax.plot(np.arange(1, N + 1), xs * 100, label=f"ρ = {corr3:.2f}")
+    ax.plot(np.arange(1, N + 1), zs * 100, label=f"{corr1:.2f}", color="blue")
+    ax.plot(np.arange(1, N + 1), ys * 100, label=f"{corr2:.2f}", color="red")
+    ax.plot(np.arange(1, N + 1), xs * 100, label=f"{corr3:.2f}", color="green")
 
     ax.set_xlabel("Number of Stocks")
     ax.set_ylabel("σ")
     ax.set_ylim(0, 11)
-    ax.legend(title="Correlation")
+    ax.legend(title="Correlations")
     return fig
 
 
@@ -95,18 +95,18 @@ def plot_frontier(means, cov, min_return, max_return, rf=None):
         # Tangency point
         tangent = tangency_point(means, cov, rf)  # Assuming this function is defined
         ax.scatter(
-            [tangent[1] * 100], [tangent[0] * 100], color="orange", label="TP", s=50
+            [tangent[1] * 100], [tangent[0] * 100], color="orange", label="TP", s=35
         )
 
     # Add points for risky assets and MVP
     if return_points.size > 1:
         ax.scatter(
-            std_points * 100, return_points * 100, color="red", label="Stocks", s=50
+            std_points * 100, return_points * 100, color="red", label="Stocks", s=35
         )
         # Minimum Variance Portfolio point
         mvp_std = np.sqrt(1 / C) * 100
         mvp_return = 100 * A / C
-        ax.scatter([mvp_std], [mvp_return], color="green", label="MVP", s=50)
+        ax.scatter([mvp_std], [mvp_return], color="green", label="MVP", s=35)
 
     # Set labels, title, and legend
     ax.set_xlabel("σ - std dev (%)")
@@ -160,11 +160,12 @@ def plot_mv(flags):
             plot_frontier_quad(ax, stds, returns, p)
 
     # Quintuples
-    if "5" in flags:
-        plot_frontier_quint(ax, stds, returns)
+    plot_frontier_quint(ax, stds, returns)
+    ax.scatter(stds * 100, returns * 100, color="black", s=25)
 
     ax.set_xlabel("σ - std dev")
     ax.set_ylabel("μ - return")
+    ax.legend()
     return fig
 
 
@@ -220,4 +221,4 @@ def plot_frontier_quint(ax, stds, returns):
     A, B, C, D = frontier_constants(means, cov)
     risky_returns = np.linspace(r1, r5, 100)
     frontier_stds = frontier_std(A, B, C, D, risky_returns)
-    ax.plot(frontier_stds * 100, risky_returns * 100, color="red")
+    ax.plot(frontier_stds * 100, risky_returns * 100, color="red", label="All 5 Stocks")
