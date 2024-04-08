@@ -6,15 +6,15 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 from core import (
-    plot_frontier,
     plot_diversification,
     tangency_point,
+    plot_frontier,
     plot_mv,
 )
 
 
 # Load data and compute static values
-from shiny import App, render, ui, reactive
+from shiny import App, render, ui
 from shinywidgets import output_widget, render_plotly
 
 
@@ -26,7 +26,7 @@ app_ui = ui.page_navbar(
         ui.layout_columns(
             ui.card(
                 ui.card_header("Risk for Portfolio Size"),
-                output_widget("diverse"),
+                ui.output_plot("diverse"),
                 ui.card_footer(
                     ui.input_slider(
                         "num_stocks",
@@ -55,7 +55,7 @@ app_ui = ui.page_navbar(
         ui.layout_columns(
             ui.card(
                 ui.card_header("Mean Variance Frontier for 2 Stocks"),
-                output_widget("asset2_rf"),
+                ui.output_plot(id="asset2_rf"),
                 ui.card_footer(
                     ui.input_switch(
                         id="cml2", label="Capital Market Line", value=False
@@ -92,7 +92,7 @@ app_ui = ui.page_navbar(
         ui.layout_columns(
             ui.card(
                 ui.card_header("Frontiers for Small Portfolios"),
-                output_widget("mvfs"),
+                ui.output_plot("mvfs"),
                 ui.card_footer(
                     ui.input_checkbox_group(
                         "portfolio_size",
@@ -126,7 +126,7 @@ app_ui = ui.page_navbar(
         ui.layout_columns(
             ui.card(
                 ui.card_header("Mean Variance Frontier for 3 Stocks"),
-                output_widget("asset3_rf"),
+                ui.output_plot("asset3_rf"),
                 ui.input_switch(id="cml3", label="Capital Market Line", value=True),
             ),
             ui.markdown(
@@ -152,11 +152,11 @@ app_ui = ui.page_navbar(
 
 
 def server(input, output, session):
-    @render_plotly
+    @render.plot
     def diverse():
         return plot_diversification(0.1, 0, 0.25, 0.5, input.num_stocks())
 
-    @render_plotly
+    @render.plot
     def asset2_rf():
         c = 0
         means = np.array(
@@ -176,7 +176,7 @@ def server(input, output, session):
         rf = 0.05 if input.cml2() else None
         return plot_frontier(means, cov, 0.05, 0.16, rf=rf)
 
-    @render_plotly
+    @render.plot
     def asset3_rf():
         means = np.array(
             [
@@ -198,7 +198,7 @@ def server(input, output, session):
         rf = 0.05 if input.cml3() else None
         return plot_frontier(means, cov, 0.05, 0.25, rf=rf)
 
-    @render_plotly
+    @render.plot
     def mvfs():
         return plot_mv(input.portfolio_size())
 
