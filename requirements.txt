@@ -1,5 +1,4 @@
 faicons
 shiny
-shinywidgets
 matplotlib
 seaborn

@@ -1,6 +1,5 @@
 import faicons as fa
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 from core import (
@@ -135,20 +134,20 @@ app_ui = ui.page_navbar(
         "3 Stocks",
         ui.layout_columns(
             ui.card(
-                ui.card_header("Mean Variance Frontier for 3 Stocks"),
+                ui.card_header("Mean Variance Frontier for 3 Risky Assets"),
                 ui.output_plot("asset3_rf"),
                 ui.input_switch(id="cml3", label="Capital Market Line", value=True),
             ),
             ui.markdown(
                 """
-            #### 3 Stocks
+            #### 3 Risky Assets
             ---
             *Returns*: 10%, 17%, 20%  
             *Standard Deviations*: 15%, 25%, 35%  
             *Correlation*: 0.0  
 
             ---
-            Now the stocks do not lie on the frontier, but the separation theorem still holds.
+            Now the stocks do not all lie on the frontier, but the separation theorem still holds.
             Any efficient portfolio can be constructed as a linear combination of the
             risk free asset and the tangency portfolio. The tangency portfolio (TP).
                 """
@@ -171,10 +170,8 @@ def server(input, output, session):
         c = 0
         means = np.array(
             [
-                [
-                    8 / 100,
-                    15 / 100,
-                ]
+                8 / 100,
+                15 / 100,
             ]
         )
         cov = np.array(
@@ -190,11 +187,9 @@ def server(input, output, session):
     def asset3_rf():
         means = np.array(
             [
-                [
-                    10 / 100,
-                    17 / 100,
-                    0.2,
-                ]
+                10 / 100,
+                17 / 100,
+                0.2,
             ]
         )
         cov = np.array(

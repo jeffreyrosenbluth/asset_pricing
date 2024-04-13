@@ -1,0 +1,12 @@
+{
+    "https://api.shinyapps.io": {
+        "server_url": "https://api.shinyapps.io",
+        "filename": "/Users/jeffreyrosenbluth/Develop/asset_pricing",
+        "app_url": "https://cycle.shinyapps.io/asset_pricing/",
+        "app_id": 11702139,
+        "app_guid": null,
+        "title": "asset_pricing",
+        "app_mode": "python-shiny",
+        "app_store_version": 1
+    }
+}

@@ -19,10 +19,10 @@ def diversification(std, corr, N):
 
 def frontier_constants(means, covariance_matrix):
     cov_inv = np.linalg.inv(covariance_matrix)
-    I = np.ones((means.shape[1], 1))
-    A = np.vdot(np.dot(means, cov_inv), I)
-    B = np.vdot(np.dot(means, cov_inv), means.T)
-    C = np.vdot(np.dot(I.T, cov_inv), I)
+    I = np.ones(len(means))
+    A = means @ cov_inv @ I
+    B = means @ cov_inv @ means
+    C = I @ cov_inv @ I
     D = B * C - A * A
     return A, B, C, D
 
@@ -39,16 +39,16 @@ def frontier_std(A, B, C, D, r):
 def slope_of_tangency_portfolio(means, covariance_matrix, rf):
     cov_inv = np.linalg.inv(covariance_matrix)
     excess_returns = means - rf
-    return np.sqrt(np.vdot(np.dot(excess_returns, cov_inv), excess_returns.T))
+    return np.sqrt(excess_returns @ cov_inv @ excess_returns)
 
 
 def tangency_point(means, covariance_matrix, rf):
     cov_inv = np.linalg.inv(covariance_matrix)
     excess_returns = means - rf
-    u = np.dot(excess_returns, cov_inv)
-    w = u[0] / np.sum(u)
-    mean = np.vdot(w, means)
-    std = np.sqrt(np.vdot(np.dot(w, covariance_matrix), w))
+    u = excess_returns @ cov_inv
+    w = u / np.sum(u)
+    mean = w @ means
+    std = np.sqrt(w @ covariance_matrix @ w)
     return mean, std
 
 
@@ -74,7 +74,7 @@ def plot_frontier(means, cov, min_return, max_return, rf=None):
     A, B, C, D = frontier_constants(means, cov)
     risky_returns = np.linspace(min_return, max_return, 100)
     stds = frontier_std(A, B, C, D, risky_returns)
-    return_points = means[0]
+    return_points = means
     std_points = np.sqrt(np.diag(cov))
 
     # Create figure and axis objects
@@ -171,7 +171,7 @@ def plot_mv(flags):
 
 def plot_frontier_pair(ax, stds, returns, pair):
     r1, r2 = returns[pair[0]], returns[pair[1]]
-    means = np.array([[r1, r2]])
+    means = np.array([r1, r2])
     cov = np.diag([stds[pair[0]] ** 2, stds[pair[1]] ** 2])
     A, B, C, D = frontier_constants(means, cov)
     risky_returns = np.linspace(r1, r2, 100)
@@ -181,7 +181,7 @@ def plot_frontier_pair(ax, stds, returns, pair):
 
 def plot_frontier_trip(ax, stds, returns, trip):
     r1, r2, r3 = returns[trip[0]], returns[trip[1]], returns[trip[2]]
-    means = np.array([[r1, r2, r3]])
+    means = np.array([r1, r2, r3])
     cov = np.diag([stds[trip[0]] ** 2, stds[trip[1]] ** 2, stds[trip[2]] ** 2])
     A, B, C, D = frontier_constants(means, cov)
     risky_returns = np.linspace(r1, r3, 100)
@@ -196,7 +196,7 @@ def plot_frontier_quad(ax, stds, returns, quad):
         returns[quad[2]],
         returns[quad[3]],
     )
-    means = np.array([[r1, r2, r3, r4]])
+    means = np.array([r1, r2, r3, r4])
     cov = np.diag(
         [stds[quad[0]] ** 2, stds[quad[1]] ** 2, stds[quad[2]] ** 2, stds[quad[3]] ** 2]
     )
@@ -214,7 +214,7 @@ def plot_frontier_quint(ax, stds, returns):
         returns[3],
         returns[4],
     )
-    means = np.array([[r1, r2, r3, r4, r5]])
+    means = np.array([r1, r2, r3, r4, r5])
     cov = np.diag(
         [stds[0] ** 2, stds[1] ** 2, stds[2] ** 2, stds[3] ** 2, stds[4] ** 2]
     )
