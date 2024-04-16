@@ -1,14 +1,19 @@
 import faicons as fa
 import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
 from core import (
     plot_diversification,
     tangency_point,
     plot_frontier,
     plot_mv,
+    crra,
+    crra_inv,
+    cara,
+    cara_inv,
+    expected_utility,
+    expected_value,
 )
-from shiny import App, render, ui
+from shiny import App, render, ui, reactive
 
 app_dir = Path(__file__).parent
 
@@ -156,6 +161,50 @@ app_ui = ui.page_navbar(
             height="650px",
         ),
     ),
+    ui.nav_panel(
+        "Utility",
+        ui.layout_columns(
+            ui.card(
+                ui.input_slider(
+                    "risk_aversion",
+                    "Relative Risk Aversion",
+                    min=0,
+                    max=10,
+                    step=0.25,
+                    value=2.5,
+                ),
+                ui.input_numeric("wealth", "Wealth", value=1000, step=100),
+                ui.input_select(
+                    "utility",
+                    "Utility Function",
+                    {
+                        "exponential": "Exponential (CARA)",
+                        "power": "Power (CRRA)",
+                        "quadratic": "Quadratic",
+                    },
+                ),
+                ui.output_text("ev"),
+                ui.output_text("eu"),
+                ui.output_text("ce"),
+                ui.output_text("rp"),
+            ),
+            ui.card(
+                ui.input_numeric("payoff1", "Payoff 1", value=-20, step=1000),
+                ui.input_numeric("payoff2", "Payoff 2", value=10, step=1000),
+                ui.input_numeric("payoff3", "Payoff 3", value=100, step=1000),
+                ui.input_numeric("payoff4", "Payoff 4", value=250, step=1000),
+                ui.input_numeric("payoff5", "Payoff 5", value=1000, step=1000),
+            ),
+            ui.card(
+                ui.input_numeric("prob1", "Probability 1", value=0.4, step=0.01),
+                ui.input_numeric("prob2", "Probability 2", value=0.1, step=0.01),
+                ui.input_numeric("prob3", "Probability 3", value=0.2, step=0.01),
+                ui.input_numeric("prob4", "Probability 4", value=0.2, step=0.01),
+                ui.input_numeric("prob5", "Probability 5", value=0.1, step=0.01),
+            ),
+            col_widths=[4, 4, 4],
+        ),
+    ),
     title="Modern Portfolio Theory",
 )
 
@@ -206,6 +255,72 @@ def server(input, output, session):
     @render.plot
     def mvfs():
         return plot_mv(input.portfolio_size())
+
+    @reactive.calc
+    def utility():
+        uf = lambda x: (
+            crra(x + input.wealth(), input.risk_aversion())
+            if input.utility() == "power"
+            else cara(x + input.wealth(), input.wealth(), input.risk_aversion())
+        )
+        return expected_utility(
+            uf,
+            (input.payoff1() or 0),
+            (input.payoff2() or 0),
+            (input.payoff3() or 0),
+            (input.payoff4() or 0),
+            (input.payoff5() or 0),
+            (input.prob1() or 0),
+            (input.prob2() or 0),
+            (input.prob3() or 0),
+            (input.prob4() or 0),
+            (input.prob5() or 0),
+        )
+
+    @reactive.calc
+    def expected_val():
+        w = input.wealth()
+        return expected_value(
+            (w + input.payoff1() or w),
+            (w + input.payoff2() or w),
+            (w + input.payoff3() or w),
+            (w + input.payoff4() or w),
+            (w + input.payoff5() or w),
+            (input.prob1() or 0),
+            (input.prob2() or 0),
+            (input.prob3() or 0),
+            (input.prob4() or 0),
+            (input.prob5() or 0),
+        )
+
+    @render.text
+    def eu():
+        u = utility()
+        return f"Expected Utility: {u:.2f}"
+
+    @render.text
+    def ce():
+        u = utility()
+        if input.utility() == "power":
+            w = crra_inv(u, input.risk_aversion())
+        else:
+            w = cara_inv(u, input.wealth(), input.risk_aversion())
+        return f"Certainty Equivalent: {w:.0f}"
+
+    @render.text
+    def ev():
+        v = expected_val()
+        return f"Expected Wealth: {v:.0f}"
+
+    @render.text
+    def rp():
+        u = utility()
+        if input.utility() == "power":
+            ce = crra_inv(u, input.risk_aversion())
+        else:
+            ce = cara_inv(u, input.wealth(), input.risk_aversion())
+        v = expected_val()
+        return f"Risk Premium: {v - ce:.0f}"
 
 
 app = App(app_ui, server)
