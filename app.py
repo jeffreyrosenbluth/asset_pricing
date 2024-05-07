@@ -8,10 +8,10 @@ from core import (
     plot_mv,
     crra,
     crra_inv,
-    cara,
-    cara_inv,
     expected_utility,
     expected_value,
+    std,
+    moment,
 )
 from shiny import App, render, ui, reactive
 
@@ -170,42 +170,51 @@ app_ui = ui.page_navbar(
                     "Relative Risk Aversion",
                     min=0,
                     max=10,
-                    step=0.25,
-                    value=2.5,
-                ),
-                ui.input_numeric("wealth", "Wealth", value=1000, step=100),
-                ui.input_select(
-                    "utility",
-                    "Utility Function",
-                    {
-                        "exponential": "Exponential (CARA)",
-                        "power": "Power (CRRA)",
-                        "quadratic": "Quadratic",
-                    },
+                    step=0.5,
+                    value=2.0,
                 ),
                 ui.output_text("ev"),
+                ui.output_text("sd"),
+                ui.output_text("sk"),
+                ui.output_text("kurt"),
+                ui.hr(style="margin: 0px"),
                 ui.output_text("eu"),
                 ui.output_text("ce"),
                 ui.output_text("rp"),
             ),
             ui.card(
-                ui.input_numeric("payoff1", "Payoff 1", value=-20, step=1000),
-                ui.input_numeric("payoff2", "Payoff 2", value=10, step=1000),
-                ui.input_numeric("payoff3", "Payoff 3", value=100, step=1000),
-                ui.input_numeric("payoff4", "Payoff 4", value=250, step=1000),
-                ui.input_numeric("payoff5", "Payoff 5", value=1000, step=1000),
+                ui.card_header("Payoffs (% Wealth)"),
+                ui.input_numeric("payoff1", "", value=25, step=1),
+                ui.input_numeric("payoff2", "", value=-15, step=1),
+                ui.input_numeric("payoff3", "", value=0, step=1),
+                ui.input_numeric("payoff4", "", value=0, step=1),
+                ui.input_numeric("payoff5", "", value=0, step=1),
             ),
             ui.card(
-                ui.input_numeric("prob1", "Probability 1", value=0.4, step=0.01),
-                ui.input_numeric("prob2", "Probability 2", value=0.1, step=0.01),
-                ui.input_numeric("prob3", "Probability 3", value=0.2, step=0.01),
-                ui.input_numeric("prob4", "Probability 4", value=0.2, step=0.01),
-                ui.input_numeric("prob5", "Probability 5", value=0.1, step=0.01),
+                ui.card_header("Probabilities (%)"),
+                ui.input_numeric("prob1", "", value=50, step=1),
+                ui.input_numeric("prob2", "", value=50, step=1),
+                ui.input_numeric("prob3", "", value=0, step=1),
+                ui.input_numeric("prob4", "", value=0, step=1),
+                ui.input_numeric("prob5", "", value=0, step=1),
+                ui.output_text("total_prob"),
             ),
-            col_widths=[4, 4, 4],
+            ui.markdown(
+                """
+            #### Expected Utility
+            ---
+            We caluculate the epected utility and related quantities of a portfolio with the given payoffs and probabilities using the CRRA (power) utility function:
+            $$ u(w) = \\frac{w^{1-\\gamma} - 1}{1-\\gamma} $$
+            γ is the relative risk aversion.
+
+            Our measure of skewness is the third central moment of the distribution:
+            $$ E\\left[\\left(\\frac{W - \\mu}{\\sigma}\\right)^3\\right] $$
+                """
+            ),
+            col_widths=[3, 2, 2, 5],
         ),
     ),
-    title="Modern Portfolio Theory",
+    title="Asset Pricing",
 )
 
 
@@ -258,69 +267,133 @@ def server(input, output, session):
 
     @reactive.calc
     def utility():
-        uf = lambda x: (
-            crra(x + input.wealth(), input.risk_aversion())
-            if input.utility() == "power"
-            else cara(x + input.wealth(), input.wealth(), input.risk_aversion())
-        )
+        uf = lambda x: crra(1 + x, input.risk_aversion())
         return expected_utility(
             uf,
-            (input.payoff1() or 0),
-            (input.payoff2() or 0),
-            (input.payoff3() or 0),
-            (input.payoff4() or 0),
-            (input.payoff5() or 0),
-            (input.prob1() or 0),
-            (input.prob2() or 0),
-            (input.prob3() or 0),
-            (input.prob4() or 0),
-            (input.prob5() or 0),
+            (input.payoff1() / 100 or 0),
+            (input.payoff2() / 100 or 0),
+            (input.payoff3() / 100 or 0),
+            (input.payoff4() / 100 or 0),
+            (input.payoff5() / 100 or 0),
+            (input.prob1() / 100 or 0),
+            (input.prob2() / 100 or 0),
+            (input.prob3() / 100 or 0),
+            (input.prob4() / 100 or 0),
+            (input.prob5() / 100 or 0),
         )
 
     @reactive.calc
     def expected_val():
-        w = input.wealth()
-        return expected_value(
-            (w + input.payoff1() or w),
-            (w + input.payoff2() or w),
-            (w + input.payoff3() or w),
-            (w + input.payoff4() or w),
-            (w + input.payoff5() or w),
-            (input.prob1() or 0),
-            (input.prob2() or 0),
-            (input.prob3() or 0),
-            (input.prob4() or 0),
-            (input.prob5() or 0),
+        return 100 * expected_value(
+            (1 + input.payoff1() / 100 or 1),
+            (1 + input.payoff2() / 100 or 1),
+            (1 + input.payoff3() / 100 or 1),
+            (1 + input.payoff4() / 100 or 1),
+            (1 + input.payoff5() / 100 or 1),
+            (input.prob1() / 100 or 0),
+            (input.prob2() / 100 or 0),
+            (input.prob3() / 100 or 0),
+            (input.prob4() / 100 or 0),
+            (input.prob5() / 100 or 0),
+        )
+
+    def standard_dev():
+        return 100 * std(
+            (input.payoff1() / 100 or 1),
+            (input.payoff2() / 100 or 1),
+            (input.payoff3() / 100 or 1),
+            (input.payoff4() / 100 or 1),
+            (input.payoff5() / 100 or 1),
+            (input.prob1() / 100 or 0),
+            (input.prob2() / 100 or 0),
+            (input.prob3() / 100 or 0),
+            (input.prob4() / 100 or 0),
+            (input.prob5() / 100 or 0),
+        )
+
+    def skewness():
+        return moment(
+            3,
+            (input.payoff1() / 100 or 1),
+            (input.payoff2() / 100 or 1),
+            (input.payoff3() / 100 or 1),
+            (input.payoff4() / 100 or 1),
+            (input.payoff5() / 100 or 1),
+            (input.prob1() / 100 or 0),
+            (input.prob2() / 100 or 0),
+            (input.prob3() / 100 or 0),
+            (input.prob4() / 100 or 0),
+            (input.prob5() / 100 or 0),
+        )
+
+    def kurtosis():
+        return moment(
+            4,
+            (input.payoff1() / 100 or 1),
+            (input.payoff2() / 100 or 1),
+            (input.payoff3() / 100 or 1),
+            (input.payoff4() / 100 or 1),
+            (input.payoff5() / 100 or 1),
+            (input.prob1() / 100 or 0),
+            (input.prob2() / 100 or 0),
+            (input.prob3() / 100 or 0),
+            (input.prob4() / 100 or 0),
+            (input.prob5() / 100 or 0),
         )
 
     @render.text
     def eu():
         u = utility()
-        return f"Expected Utility: {u:.2f}"
+        return f"Expected Utility:  {u:.3f}"
 
     @render.text
     def ce():
         u = utility()
-        if input.utility() == "power":
-            w = crra_inv(u, input.risk_aversion())
-        else:
-            w = cara_inv(u, input.wealth(), input.risk_aversion())
-        return f"Certainty Equivalent: {w:.0f}"
+        w = crra_inv(u, input.risk_aversion())
+        return f"Certainty Equiv. Return: {-100 + 100 * w:.2f}%"
 
     @render.text
     def ev():
         v = expected_val()
-        return f"Expected Wealth: {v:.0f}"
+        return f"Expected Return: {v-100:.2f}%"
+
+    @render.text
+    def sd():
+        v = standard_dev()
+        return f"Standard Deviation: {v:.2f}%"
+
+    @render.text
+    def sk():
+        v = skewness()
+        return f"Skewness: {v:.2f}"
+
+    @render.text
+    def kurt():
+        v = kurtosis()
+        return f"Kurtosis: {v:.2f}"
 
     @render.text
     def rp():
-        u = utility()
-        if input.utility() == "power":
-            ce = crra_inv(u, input.risk_aversion())
-        else:
-            ce = cara_inv(u, input.wealth(), input.risk_aversion())
+        ce = 100 * crra_inv(utility(), input.risk_aversion())
         v = expected_val()
-        return f"Risk Premium: {v - ce:.0f}"
+        return f"Risk Premium: {v - ce:.3f}%"
+
+    @render.text
+    def accept():
+        if crra_inv(utility() / 100, input.risk_aversion()) > 1:
+            return "Accepted: YES"
+        return "Accepted: NO"
+
+    @render.text
+    def total_prob():
+        total = (
+            input.prob1()
+            + input.prob2()
+            + input.prob3()
+            + input.prob4()
+            + input.prob5()
+        )
+        return f"Total: {total}"
 
 
 app = App(app_ui, server)

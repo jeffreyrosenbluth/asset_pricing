@@ -226,25 +226,17 @@ def plot_frontier_quint(ax, stds, returns):
     )
 
 
-def crra(wealth, gamma):
-    return (wealth ** (1 - gamma) - 1) / (1 - gamma)
+def crra(x, gamma):
+    if gamma == 1:
+        return np.log(x)
+    return (x ** (1 - gamma) - 1) / (1 - gamma)
 
 
 def crra_inv(u, gamma):
-    eta = 1 - gamma
     if gamma == 1:
         return np.exp(u)
+    eta = 1 - gamma
     return (eta * u + 1) ** (1 / eta)
-
-
-def cara(x, wealth, gamma):
-    A = gamma / wealth
-    return (1 - np.exp(-A * x)) / A
-
-
-def cara_inv(u, wealth, gamma):
-    A = gamma / wealth
-    return -np.log(1 - u * A) / A
 
 
 def expected_utility(uf, po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5):
@@ -259,3 +251,26 @@ def expected_utility(uf, po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, pr
 
 def expected_value(po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5):
     return prob1 * po1 + prob2 * po2 + prob3 * po3 + prob4 * po4 + prob5 * po5
+
+
+def std(po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5):
+    m = expected_value(po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5)
+    return np.sqrt(
+        prob1 * (po1 - m) ** 2
+        + prob2 * (po2 - m) ** 2
+        + prob3 * (po3 - m) ** 2
+        + prob4 * (po4 - m) ** 2
+        + prob5 * (po5 - m) ** 2
+    )
+
+
+def moment(k, po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5):
+    m = expected_value(po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5)
+    s = std(po1, po2, po3, po4, po5, prob1, prob2, prob3, prob4, prob5)
+    return (
+        prob1 * ((po1 - m) / s) ** k
+        + prob2 * ((po2 - m) / s) ** k
+        + prob3 * ((po3 - m) / s) ** k
+        + prob4 * ((po4 - m) / s) ** k
+        + prob5 * ((po5 - m) / s) ** k
+    )
